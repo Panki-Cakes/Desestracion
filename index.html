@@ -4,164 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>La Zona De Desestrés</title>
-    <!-- Carga Tailwind CSS para estilos modernos -->
+    <!-- Carga Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Carga Tone.js para el generador de ruido -->
-    <script src="https://unpkg.com/tone@14.8.49/build/Tone.js"></script>
+    <!-- Carga Tone.js para generación de audio -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <style>
         /* Estilos base y fuentes */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f9ff; /* Sky-50: Fondo muy claro y relajante */
-            color: #1e293b; /* Slate-800: Texto oscuro */
+            background-color: #0f172a; /* Fondo oscuro */
+            color: #f8fafc; /* Texto claro */
+            min-height: 100vh;
         }
         .container-box {
-            background-color: #ffffff;
+            background-color: #1e293b; /* Fondo de las tarjetas de juego */
             border-radius: 1.5rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            padding: 1.5rem;
-            border: 1px solid #e0f2f7; /* Sky-100 */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            min-height: 60vh;
         }
         .btn-desestres {
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
         }
         .btn-desestres:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4);
-        }
-
-        /* 1. Estilos para Burbujas (Bubble Popper) */
-        #bubble-board {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-            gap: 10px;
-            padding: 20px;
-            background: #e0f2f7; /* Sky-100 */
-            border-radius: 1rem;
-            max-height: 400px;
-            overflow-y: scroll;
-        }
-        .bubble {
-            width: 100%;
-            padding-bottom: 100%; /* Truco para hacerlo cuadrado */
-            background-color: #67e8f9; /* Cyan-400 */
-            border-radius: 50%;
-            cursor: pointer;
-            position: relative;
-            transform: scale(1);
-            transition: transform 0.15s ease-out, opacity 0.3s ease-in-out;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2), inset 0 0 10px rgba(255,255,255,0.7);
-        }
-        .bubble:active {
-            transform: scale(0.8);
-            box-shadow: 0 0 5px rgba(0,0,0,0.3);
-        }
-        .popped {
-            opacity: 0;
-            transform: scale(0);
+            transform: translateY(-1px);
+            opacity: 0.95;
         }
         
-        /* 2. Estilos para Respiración Guiada */
-        #breathing-circle-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 300px;
-            margin-bottom: 20px;
+        /* Estilos para Burbujas */
+        .bubble {
+            width: 30px;
+            height: 30px;
+            background-color: #4f46e5;
+            border-radius: 50%;
+            cursor: pointer;
+            position: absolute;
+            transition: transform 0.1s;
+            box-shadow: 0 0 10px rgba(79, 70, 229, 0.5);
         }
+        
+        /* Estilos para Respiración Guiada */
         #breathing-circle {
             width: 150px;
             height: 150px;
-            background-color: #818cf8; /* Indigo-400 */
+            background-color: #8b5cf6;
             border-radius: 50%;
-            box-shadow: 0 0 20px #818cf8;
-            transition: all 4s ease-in-out;
-            will-change: transform;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-weight: bold;
-            font-size: 1.2rem;
-            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            margin: 0 auto;
+            animation: breathe 16s ease-in-out infinite; /* 4s in, 7s hold, 5s out = 16s */
+            box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7);
         }
-        .breathe-in {
-            transform: scale(1.5);
-            transition-duration: 4s !important;
-            box-shadow: 0 0 40px #6366f1;
-        }
-        .breathe-out {
-            transform: scale(1);
-            transition-duration: 8s !important;
-            box-shadow: 0 0 20px #818cf8;
-        }
-        .hold-phase {
-            transition-duration: 7s !important;
-        }
-
-        /* 3. Estilos para Lienzo Zen */
-        #zen-canvas {
-            touch-action: none; /* Previene el scroll con el dedo mientras se dibuja */
-            border-radius: 0.75rem;
-            border: 2px solid #cbd5e1; /* Slate-300 */
-            background-color: white;
-            cursor: crosshair;
-        }
-
-        /* Estilos para el Contador de Enfoque (Pomodoro) */
-        #focus-timer {
-            font-size: 4rem;
-            font-weight: bold;
-            color: #10b981; /* Emerald-500 */
-        }
-        .timer-running {
-            box-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
-        }
-
-        /* Estilos para Borrado de Preocupaciones */
-        #worry-board {
-            width: 100%;
-            min-height: 200px;
-            border: 1px dashed #94a3b8; /* Slate-400 */
-            background-color: #f8fafc; /* Slate-50 */
-            padding: 1rem;
-            border-radius: 0.5rem;
-            text-align: center;
-            font-size: 1.1rem;
-            color: #475569; /* Slate-600 */
-        }
-        .worry-item {
-            display: inline-block;
-            background-color: #fecaca; /* Red-200 */
-            color: #991b1b; /* Red-800 */
-            padding: 0.25rem 0.75rem;
-            margin: 0.25rem;
-            border-radius: 9999px;
-            cursor: pointer;
-            transition: opacity 0.3s ease, transform 0.3s ease;
-        }
-        .worry-item.erased {
-            opacity: 0;
-            transform: scale(0);
+        @keyframes breathe {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7);
+                opacity: 0.8;
+            }
+            25% { /* Inhale 4s */
+                transform: scale(1.5);
+                box-shadow: 0 0 0 20px rgba(139, 92, 246, 0);
+                opacity: 1;
+            }
+            43.75% { /* Hold 7s -> 25% + (7/16)*100 = 68.75% */
+                transform: scale(1.5);
+                opacity: 1;
+            }
+            68.75% { /* Exhale 5s */
+                transform: scale(1);
+                opacity: 0.8;
+            }
         }
         
-        /* Estilos para Dibujo de Simetría */
-        #symmetry-canvas {
-            border-radius: 0.75rem;
-            border: 2px solid #cbd5e1;
-            background-color: white;
+        /* Estilos para Lienzo Zen y Borrado de Preocupaciones */
+        #zen-canvas, #wave-canvas, #symmetry-canvas {
+            border-radius: 0.5rem;
             cursor: crosshair;
-        }
-
-
-        /* Animación de carga discreta */
-        .loading-pulse {
-            border-top-color: transparent;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+            background-color: #334155; /* Slate-700 */
         }
     </style>
 </head>
@@ -169,547 +86,483 @@
 
     <div class="max-w-6xl mx-auto">
         <header class="text-center mb-8">
-            <h1 class="text-4xl sm:text-5xl font-extrabold text-indigo-600 mb-2">🧘 La Zona De Desestrés 🌊</h1>
-            <p class="text-gray-600 text-lg">Un espacio para calmar la mente y liberar tensión con 10 actividades.</p>
+            <h1 class="text-4xl font-extrabold text-violet-400 mb-2">Pankicakes: La Zona De Desestrés</h1>
+            <p class="text-violet-300 text-lg">10 actividades para calmar la mente y mejorar el enfoque.</p>
         </header>
 
         <!-- Navegación de Actividades (Tabs) -->
-        <nav class="mb-8 border-b border-sky-200">
-            <div id="activity-tabs" class="grid grid-cols-2 md:grid-cols-5 gap-2 sm:gap-4 -mb-px text-sm font-medium">
-                <button data-activity="burbujas" class="px-2 py-2 text-indigo-600 border-b-2 border-indigo-500 active-tab transition duration-300 whitespace-nowrap overflow-hidden text-ellipsis">1. Pulsar Burbujas</button>
-                <button data-activity="respiracion" class="px-2 py-2 text-gray-500 border-b-2 border-transparent hover:text-indigo-600 hover:border-indigo-300 transition duration-300 whitespace-nowrap overflow-hidden text-ellipsis">2. Respiración Guiada</button>
-                <button data-activity="lienzo" class="px-2 py-2 text-gray-500 border-b-2 border-transparent hover:text-indigo-600 hover:border-indigo-300 transition duration-300 whitespace-nowrap overflow-hidden text-ellipsis">3. Lienzo Zen</button>
-                <button data-activity="ruido_blanco" class="px-2 py-2 text-gray-500 border-b-2 border-transparent hover:text-indigo-600 hover:border-indigo-300 transition duration-300 whitespace-nowrap overflow-hidden text-ellipsis">4. Ruido Blanco</button>
-                <button data-activity="pomodoro" class="px-2 py-2 text-gray-500 border-b-2 border-transparent hover:text-indigo-600 hover:border-indigo-300 transition duration-300 whitespace-nowrap overflow-hidden text-ellipsis">5. Contador de Enfoque</button>
-                <button data-activity="preocupaciones" class="px-2 py-2 text-gray-500 border-b-2 border-transparent hover:text-indigo-600 hover:border-indigo-300 transition duration-300 whitespace-nowrap overflow-hidden text-ellipsis">6. Borrado de Preocupaciones</button>
-                <button data-activity="gratitud" class="px-2 py-2 text-gray-500 border-b-2 border-transparent hover:text-indigo-600 hover:border-indigo-300 transition duration-300 whitespace-nowrap overflow-hidden text-ellipsis">7. Diario de Gratitud</button>
-                <button data-activity="ondas" class="px-2 py-2 text-gray-500 border-b-2 border-transparent hover:text-indigo-600 hover:border-indigo-300 transition duration-300 whitespace-nowrap overflow-hidden text-ellipsis">8. Visualizador de Ondas</button>
-                <button data-activity="memoria" class="px-2 py-2 text-gray-500 border-b-2 border-transparent hover:text-indigo-600 hover:border-indigo-300 transition duration-300 whitespace-nowrap overflow-hidden text-ellipsis">9. Juego de Memoria</button>
-                <button data-activity="simetria" class="px-2 py-2 text-gray-500 border-b-2 border-transparent hover:text-indigo-600 hover:border-indigo-300 transition duration-300 whitespace-nowrap overflow-hidden text-ellipsis">10. Dibujo de Simetría</button>
+        <nav class="mb-8 border-b border-slate-700">
+            <div id="activity-tabs" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 -mb-px text-xs sm:text-sm font-medium">
+                <button data-activity="bubbles" class="px-2 py-2 text-violet-300 border-b-2 border-transparent hover:text-violet-400 hover:border-violet-400 active-tab transition duration-300 text-center truncate">1. Burbujas</button>
+                <button data-activity="breathing" class="px-2 py-2 text-slate-300 border-b-2 border-transparent hover:text-violet-400 hover:border-violet-400 transition duration-300 text-center truncate">2. Respiración</button>
+                <button data-activity="zen_canvas" class="px-2 py-2 text-slate-300 border-b-2 border-transparent hover:text-violet-400 hover:border-violet-400 transition duration-300 text-center truncate">3. Lienzo Zen</button>
+                <button data-activity="noise" class="px-2 py-2 text-slate-300 border-b-2 border-transparent hover:text-violet-400 hover:border-violet-400 transition duration-300 text-center truncate">4. Ruido Blanco</button>
+                <button data-activity="pomodoro" class="px-2 py-2 text-slate-300 border-b-2 border-transparent hover:text-violet-400 hover:border-violet-400 transition duration-300 text-center truncate">5. Enfoque (Pomodoro)</button>
+                <button data-activity="eraser" class="px-2 py-2 text-slate-300 border-b-2 border-transparent hover:text-violet-400 hover:border-violet-400 transition duration-300 text-center truncate">6. Borrar Preocupaciones</button>
+                <button data-activity="gratitude" class="px-2 py-2 text-slate-300 border-b-2 border-transparent hover:text-violet-400 hover:border-violet-400 transition duration-300 text-center truncate">7. Diario de Gratitud</button>
+                <button data-activity="wave" class="px-2 py-2 text-slate-300 border-b-2 border-transparent hover:text-violet-400 hover:border-violet-400 transition duration-300 text-center truncate">8. Visualizador de Ondas</button>
+                <button data-activity="memory" class="px-2 py-2 text-slate-300 border-b-2 border-transparent hover:text-violet-400 hover:border-violet-400 transition duration-300 text-center truncate">9. Concentración (Memoria)</button>
+                <button data-activity="symmetry" class="px-2 py-2 text-slate-300 border-b-2 border-transparent hover:text-violet-400 hover:border-violet-400 transition duration-300 text-center truncate">10. Dibujo Simétrico</button>
             </div>
         </nav>
 
         <!-- Contenedor de Actividades -->
-        <div id="activity-container">
+        <div id="activity-container" class="container-box p-4 sm:p-8">
             <!-- Las actividades se cargarán aquí -->
         </div>
     </div>
 
     <!-- Script principal de JavaScript -->
     <script>
-        // =======================================================
-        // Configuración Global y de UI
-        // =======================================================
+        let currentActivity = 'bubbles'; 
         const activityContainer = document.getElementById('activity-container');
         const activityTabs = document.getElementById('activity-tabs');
         
-        let currentActivity = 'burbujas'; // La actividad inicial
+        // Variables globales de estado y recursos
+        let noisePlayer = null;
+        let pomodoroInterval = null;
+        let waveRAF = null; // Para requestAnimationFrame de Wave
+        let symmetryCtx = null;
+        let symmetryIsDrawing = false;
+        let breathingAnimationStarted = false;
+
+        // =======================================================
+        // Lógica de Limpieza y Control
+        // =======================================================
+
+        function cleanupPreviousActivity() {
+            // 1. Limpiar Audio (Tone.js)
+            if (noisePlayer) {
+                noisePlayer.stop();
+                noisePlayer.dispose();
+                noisePlayer = null;
+                // [FIX] Se eliminó Tone.context.close() para evitar el InvalidStateError al reanudar el contexto.
+            }
+
+            // 2. Limpiar Intervalos (Pomodoro)
+            if (pomodoroInterval) {
+                clearInterval(pomodoroInterval);
+                pomodoroInterval = null;
+                // Reiniciar estado de pomodoro si existe
+                if (window.pomodoroState) {
+                    window.pomodoroState.isRunning = false;
+                    window.pomodoroState.isBreak = false;
+                }
+            }
+            
+            // 3. Limpiar Animaciones (Wave Visualizer)
+            if (waveRAF) {
+                cancelAnimationFrame(waveRAF);
+                waveRAF = null;
+            }
+
+            // 4. Limpiar Animación de Respiración
+            const circle = document.getElementById('breathing-circle');
+            if (circle) {
+                circle.style.animationPlayState = 'paused';
+            }
+            
+            // 5. Limpiar Eventos de Dibujo
+            // [FIX] Se eliminó el bucle de limpieza de canvas que causaba ReferenceError: handleSymmetryStart is not defined.
+            // Al sobrescribir activityContainer.innerHTML, los elementos de canvas y sus listeners se eliminan automáticamente.
+
+            // 6. Limpiar Grid de Memoria (no requiere limpieza explícita de listeners aquí)
+        }
+
+        // =======================================================
+        // Lógica de Navegación
+        // =======================================================
 
         const activityTemplates = {
-            'burbujas': renderBurbujas,
-            'respiracion': renderRespiracion,
-            'lienzo': renderLienzo,
-            'ruido_blanco': renderRuidoBlanco,
+            'bubbles': renderBubbles,
+            'breathing': renderBreathing,
+            'zen_canvas': renderZenCanvas,
+            'noise': renderNoise,
             'pomodoro': renderPomodoro,
-            'preocupaciones': renderPreocupaciones,
-            'gratitud': renderGratitud,
-            'ondas': renderOndas,
-            'memoria': renderMemoria,
-            'simetria': renderSimetria
+            'eraser': renderEraser,
+            'gratitude': renderGratitude,
+            'wave': renderWave,
+            'memory': renderMemory,
+            'symmetry': renderSymmetry
         };
 
         function switchActivity(activityName) {
-            // 1. Limpiar recursos de la actividad anterior
-            cleanupPreviousActivity(currentActivity);
+            cleanupPreviousActivity(); 
 
             currentActivity = activityName;
             activityContainer.innerHTML = activityTemplates[activityName]();
             
-            // 2. Inicializar la lógica de la nueva actividad
-            if (activityName === 'burbujas') initializeBurbujas();
-            if (activityName === 'respiracion') initializeRespiracion();
-            if (activityName === 'lienzo') initializeLienzo();
-            if (activityName === 'ruido_blanco') initializeRuidoBlanco();
+            // Inicializar la lógica específica de la actividad
+            if (activityName === 'bubbles') initializeBubbles();
+            if (activityName === 'breathing') initializeBreathing();
+            if (activityName === 'zen_canvas') initializeZenCanvas();
+            if (activityName === 'noise') initializeNoise();
             if (activityName === 'pomodoro') initializePomodoro();
-            if (activityName === 'preocupaciones') initializePreocupaciones();
-            if (activityName === 'gratitud') initializeGratitud();
-            if (activityName === 'ondas') initializeOndas();
-            if (activityName === 'memoria') initializeMemoria();
-            if (activityName === 'simetria') initializeSimetria();
+            if (activityName === 'eraser') initializeEraser();
+            if (activityName === 'gratitude') initializeGratitude();
+            if (activityName === 'wave') initializeWave();
+            if (activityName === 'memory') initializeMemory();
+            if (activityName === 'symmetry') initializeSymmetry();
 
-            // 3. Actualizar el estilo de las pestañas
+            // Actualizar el estilo de las pestañas
             document.querySelectorAll('#activity-tabs button').forEach(button => {
                 if (button.getAttribute('data-activity') === activityName) {
-                    button.classList.remove('text-gray-500', 'border-transparent', 'hover:border-indigo-300');
-                    button.classList.add('text-indigo-600', 'border-indigo-500');
+                    button.classList.remove('text-slate-300');
+                    button.classList.add('text-violet-300', 'border-violet-400');
                 } else {
-                    button.classList.add('text-gray-500', 'border-transparent', 'hover:border-indigo-300');
-                    button.classList.remove('text-indigo-600', 'border-indigo-500');
+                    button.classList.add('text-slate-300');
+                    button.classList.remove('text-violet-300', 'border-violet-400');
                 }
             });
         }
 
-        // Manejar clics en las pestañas de navegación
         activityTabs.addEventListener('click', (e) => {
-            const activityName = e.target.closest('button')?.getAttribute('data-activity');
+            const activityName = e.target.getAttribute('data-activity');
             if (activityName && activityName !== currentActivity) {
                 switchActivity(activityName);
             }
         });
 
-        // Función para limpiar recursos de todas las actividades
-        function cleanupPreviousActivity(activityName) {
-            // Respiración
-            if (window.breathingInterval) {
-                clearInterval(window.breathingInterval);
-                window.breathingInterval = null;
-            }
-            // Ruido Blanco
-            if (window.whiteNoise && window.whiteNoise.isStarted) {
-                window.whiteNoise.dispose();
-                window.whiteNoise = null;
-                Tone.context.close();
-            }
-            // Pomodoro
-            if (window.timerInterval) {
-                clearInterval(window.timerInterval);
-                window.timerInterval = null;
-            }
-            // Ondas
-            if(window.waveAnimationFrame) {
-                cancelAnimationFrame(window.waveAnimationFrame);
-                window.waveAnimationFrame = null;
-            }
-        }
-
         // =======================================================
-        // 1. PULSAR BURBUJAS (Bubble Popper)
+        // 1. Pulsar Burbujas (Bubble Popper)
         // =======================================================
-        let burbujasState = {
-            poppedCount: 0
-        };
-        const TOTAL_BUBBLES = 50; // Cantidad de burbujas en el tablero
 
-        function renderBurbujas() {
+        function renderBubbles() {
             return `
-                <div id="burbujas-activity" class="container-box max-w-2xl mx-auto text-center">
-                    <h2 class="text-2xl font-bold mb-4 text-cyan-600">Pop It Digital</h2>
-                    <p class="text-gray-500 mb-4">Pulsa todas las burbujas para liberar la tensión. Recarga cuando termines.</p>
-                    
-                    <div class="flex justify-between items-center mb-4 p-3 bg-sky-50 rounded-lg">
-                        <div class="text-lg font-medium">Pulsadas: <span id="burbujas-count" class="text-cyan-600">${burbujasState.poppedCount}</span> / ${TOTAL_BUBBLES}</div>
-                        <button id="burbujas-reset-button" class="btn-desestres bg-indigo-500 text-white font-bold py-2 px-4 rounded-xl hover:bg-indigo-600">
-                            Recargar Tablero
-                        </button>
-                    </div>
-
-                    <div id="bubble-board">
-                        <!-- Las burbujas se inyectan aquí -->
-                    </div>
+                <div id="bubbles-area" class="w-full h-80 relative rounded-xl bg-slate-800 p-4 overflow-hidden">
+                    <h3 class="text-xl font-semibold mb-2 text-violet-300">1. Pulsar Burbujas</h3>
+                    <p class="text-sm text-gray-400 mb-4">Haz clic para generar y reventar burbujas. ¡Satisfactorio y liberador!</p>
                 </div>
             `;
         }
 
-        function initializeBurbujas() {
-            const board = document.getElementById('bubble-board');
-            if (!board) return;
-            
-            // Renderizar las burbujas
-            board.innerHTML = '';
-            for (let i = 0; i < TOTAL_BUBBLES; i++) {
+        function initializeBubbles() {
+            const area = document.getElementById('bubbles-area');
+            if (!area) return;
+
+            area.addEventListener('click', (e) => {
+                // Crear una nueva burbuja
                 const bubble = document.createElement('div');
                 bubble.classList.add('bubble');
-                bubble.dataset.id = i;
-                bubble.addEventListener('click', handleBubbleClick);
-                board.appendChild(bubble);
-            }
+                bubble.style.left = `${e.clientX - area.getBoundingClientRect().left - 15}px`;
+                bubble.style.top = `${e.clientY - area.getBoundingClientRect().top - 15}px`;
+                area.appendChild(bubble);
 
-            // Reiniciar estado
-            burbujasState.poppedCount = 0;
-            document.getElementById('burbujas-count').textContent = burbujasState.poppedCount;
-            document.getElementById('burbujas-reset-button').addEventListener('click', initializeBurbujas);
-        }
+                // Función para reventar
+                bubble.onclick = () => {
+                    bubble.style.transform = 'scale(1.5)';
+                    bubble.style.opacity = '0';
+                    setTimeout(() => {
+                        bubble.remove();
+                    }, 150);
+                };
 
-        function handleBubbleClick(e) {
-            const bubble = e.target;
-            if (!bubble.classList.contains('popped')) {
-                bubble.classList.add('popped');
-                burbujasState.poppedCount++;
-                document.getElementById('burbujas-count').textContent = burbujasState.poppedCount;
-            }
+                // Desvanecer después de un tiempo si no se revienta
+                setTimeout(() => {
+                    if (bubble.parentNode) {
+                        bubble.style.opacity = '0';
+                        setTimeout(() => bubble.remove(), 1000);
+                    }
+                }, 3000);
+            });
         }
 
         // =======================================================
-        // 2. RESPIRACIÓN GUIADA (Breathing Guide)
+        // 2. Respiración Guiada (Breathing Guide)
         // =======================================================
-        const BREATHING_PATTERN = [
-            { text: "INHALA", duration: 4, action: 'in' }, // 4 segundos
-            { text: "SOSTEN", duration: 7, action: 'hold' }, // 7 segundos
-            { text: "EXHALA", duration: 8, action: 'out' }  // 8 segundos
-        ];
-
-        function renderRespiracion() {
+        
+        function renderBreathing() {
             return `
-                <div id="respiracion-activity" class="container-box max-w-xl mx-auto text-center">
-                    <h2 class="text-2xl font-bold mb-4 text-indigo-600">Respiración 4-7-8</h2>
-                    <p class="text-gray-500 mb-6">Sigue el círculo para calmar tu sistema nervioso. Una ronda = 19 segundos.</p>
+                <div class="max-w-md mx-auto text-center">
+                    <h3 class="text-xl font-semibold mb-4 text-violet-300">2. Respiración Guiada (Técnica 4-7-8)</h3>
+                    <p class="text-sm text-gray-400 mb-6">Inhala 4s, Sostén 7s, Exhala 5s. Sigue el círculo.</p>
                     
-                    <div id="breathing-circle-container">
-                        <div id="breathing-circle">
-                            <span id="breathing-text">LISTO</span>
-                        </div>
+                    <div id="breathing-circle-container" class="relative w-40 h-40 mx-auto mb-8 flex items-center justify-center">
+                        <div id="breathing-circle" class="absolute"></div>
+                        <span id="breathing-text" class="relative text-lg font-bold text-white">INICIAR</span>
                     </div>
-
-                    <p id="breathing-info" class="text-lg font-semibold text-gray-700 mb-4">Patrón: 4s INHALA - 7s SOSTEN - 8s EXHALA</p>
-
-                    <button id="respiracion-start-button" class="btn-desestres bg-indigo-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-indigo-600">
-                        INICIAR CICLO
+                    
+                    <button id="breathing-toggle" class="btn-desestres bg-violet-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-violet-700">
+                        INICIAR
                     </button>
                 </div>
             `;
         }
         
-        function initializeRespiracion() {
-            const startButton = document.getElementById('respiracion-start-button');
+        function initializeBreathing() {
             const circle = document.getElementById('breathing-circle');
-            const textElement = document.getElementById('breathing-text');
-
-            startButton.addEventListener('click', () => startBreathingCycle(circle, textElement, startButton));
+            const text = document.getElementById('breathing-text');
+            const toggleBtn = document.getElementById('breathing-toggle');
             
-            // Limpiar cualquier ciclo anterior si se vuelve a la actividad
-            cleanupPreviousActivity('respiracion'); 
-        }
-
-        function startBreathingCycle(circle, textElement, startButton) {
-            if (window.breathingInterval) return; // Ya está corriendo
-
-            startButton.disabled = true;
-            let currentStepIndex = 0;
-
-            // Empezar el ciclo completo
-            textElement.textContent = "EMPEZANDO...";
+            let isRunning = false;
             
-            function runCycle() {
-                let step = BREATHING_PATTERN[currentStepIndex];
-                
-                // Asegurar que la transición de CSS coincida con la duración JS (importante para evitar saltos)
-                circle.style.transitionDuration = `${step.duration}s`; 
-
-                textElement.textContent = step.text;
-                
-                circle.classList.remove('breathe-in', 'breathe-out', 'hold-phase');
-
-                if (step.action === 'in') {
-                    circle.classList.add('breathe-in');
-                } else if (step.action === 'out') {
-                    circle.classList.add('breathe-out');
-                } else if (step.action === 'hold') {
-                    circle.classList.add('hold-phase');
-                }
-                
-                currentStepIndex = (currentStepIndex + 1) % BREATHING_PATTERN.length;
-                
-                // Programar el siguiente paso
-                window.breathingInterval = setTimeout(runCycle, step.duration * 1000);
+            const phases = [
+                { name: 'INHALAR (4s)', duration: 4000, color: 'text-green-300' },
+                { name: 'SOSTENER (7s)', duration: 7000, color: 'text-yellow-300' },
+                { name: 'EXHALAR (5s)', duration: 5000, color: 'text-red-300' }
+            ];
+            
+            function updateBreathingText(phase) {
+                text.textContent = phase.name;
+                text.className = `relative text-lg font-bold ${phase.color}`;
             }
-            
-            setTimeout(() => {
-                currentStepIndex = 0;
-                runCycle();
-            }, 1000); // 1 segundo de pausa
 
-            // Esto es solo para que el usuario pueda parar el ciclo manualmente
-            startButton.textContent = "DETENER CICLO";
-            startButton.onclick = () => {
-                clearTimeout(window.breathingInterval);
-                window.breathingInterval = null;
-                startButton.textContent = "INICIAR CICLO";
-                startButton.disabled = false;
-                circle.classList.remove('breathe-in', 'breathe-out', 'hold-phase');
-                circle.style.transitionDuration = `0.5s`;
-                textElement.textContent = "PAUSADO";
-                circle.style.transform = 'scale(1)';
-                startButton.onclick = () => startBreathingCycle(circle, textElement, startButton);
+            function animateBreathing() {
+                if (!isRunning) return;
+
+                let index = 0;
+                
+                function runPhase() {
+                    const phase = phases[index % phases.length];
+                    updateBreathingText(phase);
+                    
+                    setTimeout(() => {
+                        if (isRunning) {
+                            index++;
+                            runPhase();
+                        }
+                    }, phase.duration);
+                }
+
+                runPhase();
+            }
+
+            toggleBtn.onclick = () => {
+                isRunning = !isRunning;
+                if (isRunning) {
+                    toggleBtn.textContent = 'PAUSAR';
+                    circle.style.animationPlayState = 'running';
+                    animateBreathing();
+                } else {
+                    toggleBtn.textContent = 'REANUDAR';
+                    circle.style.animationPlayState = 'paused';
+                    text.textContent = 'PAUSADO';
+                    text.className = 'relative text-lg font-bold text-yellow-500';
+                }
             };
+            
+            // Estado inicial: pausar la animación hasta que el usuario pulse INICIAR
+            circle.style.animationPlayState = 'paused';
+            text.textContent = 'INICIAR';
         }
 
-
         // =======================================================
-        // 3. LIENZO ZEN (Zen Canvas)
+        // 3. Lienzo Zen (Zen Canvas)
         // =======================================================
-        let lienzoState = {
-            isDrawing: false,
-            lastX: 0,
-            lastY: 0,
-            color: '#1e293b', // Slate-800
-            lineWidth: 5,
-            canvas: null,
-            ctx: null
-        };
 
-        function renderLienzo() {
-            // Aseguramos que el lienzo ocupe el ancho completo y sea responsivo
+        function renderZenCanvas() {
             return `
-                <div id="lienzo-activity" class="container-box max-w-4xl mx-auto text-center">
-                    <h2 class="text-2xl font-bold mb-4 text-emerald-600">Lienzo para Garabatos Zen</h2>
-                    <p class="text-gray-500 mb-4">Dibuja libremente. Deja que tu mano guíe la línea y libera la mente.</p>
-                    
-                    <div class="flex flex-wrap justify-center gap-4 mb-4 p-3 bg-sky-50 rounded-lg">
-                        <label class="text-sm font-medium text-gray-700 flex items-center">
-                            Color: 
-                            <input type="color" id="lienzo-color-picker" value="#1e293b" class="ml-2 w-8 h-8 rounded-full border-2 border-gray-400 cursor-pointer">
-                        </label>
-                        <label class="text-sm font-medium text-gray-700 flex items-center">
-                            Grosor: 
-                            <input type="range" id="lienzo-thickness-slider" min="1" max="20" value="5" class="ml-2 w-32 cursor-pointer">
-                            <span id="lienzo-thickness-value" class="ml-2 text-gray-700">5</span>
-                        </label>
-                        <button id="lienzo-clear-button" class="btn-desestres bg-red-500 text-white font-bold py-2 px-4 rounded-xl hover:bg-red-600">
-                            Limpiar
-                        </button>
-                    </div>
-
-                    <canvas id="zen-canvas"></canvas>
+                <div class="w-full text-center">
+                    <h3 class="text-xl font-semibold mb-4 text-violet-300">3. Lienzo Zen (Dibujo Libre)</h3>
+                    <p class="text-sm text-gray-400 mb-4">Garabatea suavemente. No hay objetivos, solo movimiento.</p>
+                    <canvas id="zen-canvas" class="w-full h-80"></canvas>
+                    <button id="zen-clear" class="btn-desestres mt-4 bg-red-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-red-700">
+                        Limpiar
+                    </button>
                 </div>
             `;
         }
 
-        function initializeLienzo() {
-            lienzoState.canvas = document.getElementById('zen-canvas');
-            lienzoState.ctx = lienzoState.canvas.getContext('2d');
+        function initializeZenCanvas() {
+            const canvas = document.getElementById('zen-canvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            let isDrawing = false;
 
             // Hacer el canvas responsivo
             function resizeCanvas() {
-                const container = document.getElementById('lienzo-activity');
-                if (container) {
-                    lienzoState.canvas.width = container.clientWidth - 32; // -32 por padding del container
-                    lienzoState.canvas.height = Math.min(400, container.clientWidth * 0.75); // Altura máxima de 400px o 75% del ancho
-                }
+                const rect = canvas.parentNode.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = 320; // Altura fija
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#a78bfa'; /* Violet-400 */
+                ctx.lineCap = 'round';
             }
             window.addEventListener('resize', resizeCanvas);
-            resizeCanvas(); // Llamada inicial
+            resizeCanvas();
 
-            // Configuración inicial del contexto
-            lienzoState.ctx.lineCap = 'round';
-            lienzoState.ctx.lineJoin = 'round';
-            lienzoState.ctx.lineWidth = lienzoState.lineWidth;
-            lienzoState.ctx.strokeStyle = lienzoState.color;
-
-            // Event listeners para la interacción (Mouse y Touch)
-            lienzoState.canvas.addEventListener('mousedown', startDrawingLienzo);
-            lienzoState.canvas.addEventListener('mousemove', drawLienzo);
-            lienzoState.canvas.addEventListener('mouseup', stopDrawingLienzo);
-            lienzoState.canvas.addEventListener('mouseout', stopDrawingLienzo);
-            
-            lienzoState.canvas.addEventListener('touchstart', startDrawingLienzo);
-            lienzoState.canvas.addEventListener('touchmove', drawLienzo);
-            lienzoState.canvas.addEventListener('touchend', stopDrawingLienzo);
-
-            // Controles
-            document.getElementById('lienzo-color-picker').addEventListener('input', (e) => {
-                lienzoState.color = e.target.value;
-                lienzoState.ctx.strokeStyle = lienzoState.color;
-            });
-            const thicknessSlider = document.getElementById('lienzo-thickness-slider');
-            const thicknessValue = document.getElementById('lienzo-thickness-value');
-            thicknessSlider.addEventListener('input', (e) => {
-                lienzoState.lineWidth = parseInt(e.target.value);
-                lienzoState.ctx.lineWidth = lienzoState.lineWidth;
-                thicknessValue.textContent = lienzoState.lineWidth;
-            });
-            document.getElementById('lienzo-clear-button').addEventListener('click', clearCanvasLienzo);
-        }
-        
-        // Helper para obtener la posición correcta del evento (mouse o touch)
-        function getCoordsLienzo(e) {
-            const rect = lienzoState.canvas.getBoundingClientRect();
-            let clientX, clientY;
-
-            if (e.touches && e.touches.length > 0) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
+            function startDrawing(e) {
+                isDrawing = true;
+                draw(e);
             }
 
-            return {
-                x: clientX - rect.left,
-                y: clientY - rect.top
+            function stopDrawing() {
+                isDrawing = false;
+                ctx.beginPath(); // Finalizar el camino actual
+            }
+
+            function draw(e) {
+                if (!isDrawing) return;
+                
+                // Obtener coordenadas relativas
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            }
+
+            // Eventos de ratón
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mousemove', draw);
+            
+            // Eventos táctiles
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                startDrawing(e.touches[0]);
+            });
+            canvas.addEventListener('touchend', stopDrawing);
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                draw(e.touches[0]);
+            });
+
+            // Botón de limpiar
+            document.getElementById('zen-clear').onclick = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
             };
         }
 
-        function startDrawingLienzo(e) {
-            e.preventDefault(); // Previene el scroll o el comportamiento táctil por defecto
-            lienzoState.isDrawing = true;
-            const coords = getCoordsLienzo(e);
-            [lienzoState.lastX, lienzoState.lastY] = [coords.x, coords.y];
-        }
-
-        function drawLienzo(e) {
-            e.preventDefault(); 
-            if (!lienzoState.isDrawing) return;
-            
-            const coords = getCoordsLienzo(e);
-            const ctx = lienzoState.ctx;
-
-            ctx.beginPath();
-            ctx.moveTo(lienzoState.lastX, lienzoState.lastY);
-            ctx.lineTo(coords.x, coords.y);
-            ctx.stroke();
-
-            [lienzoState.lastX, lienzoState.lastY] = [coords.x, coords.y];
-        }
-
-        function stopDrawingLienzo() {
-            lienzoState.isDrawing = false;
-        }
-
-        function clearCanvasLienzo() {
-            const ctx = lienzoState.ctx;
-            ctx.clearRect(0, 0, lienzoState.canvas.width, lienzoState.canvas.height);
-        }
-        
         // =======================================================
-        // 4. GENERADOR DE RUIDO BLANCO (White Noise)
+        // 4. Generador de Ruido Blanco (White Noise)
         // =======================================================
-        let noiseState = {
-            noiseType: 'white',
-            volume: -10, // dB
-            isPlaying: false
-        };
 
-        function renderRuidoBlanco() {
+        function renderNoise() {
             return `
-                <div id="ruido-blanco-activity" class="container-box max-w-xl mx-auto text-center">
-                    <h2 class="text-2xl font-bold mb-4 text-pink-600">Generador de Sonido Relajante</h2>
-                    <p class="text-gray-500 mb-6">Usa el ruido blanco/rosa/marrón para bloquear distracciones y mejorar la concentración.</p>
+                <div class="max-w-md mx-auto text-center">
+                    <h3 class="text-xl font-semibold mb-4 text-violet-300">4. Generador de Ruido (Sound Masking)</h3>
+                    <p class="text-sm text-gray-400 mb-6">Usa ruido constante para bloquear distracciones y calmar la mente.</p>
                     
-                    <div class="flex justify-center gap-4 mb-6">
-                        <button data-noise="white" class="noise-btn bg-white text-gray-800 border-2 border-pink-400 font-semibold py-2 px-4 rounded-xl hover:bg-pink-100 transition duration-200">Blanco</button>
-                        <button data-noise="pink" class="noise-btn bg-white text-gray-800 border-2 border-pink-400 font-semibold py-2 px-4 rounded-xl hover:bg-pink-100 transition duration-200">Rosa</button>
-                        <button data-noise="brown" class="noise-btn bg-white text-gray-800 border-2 border-pink-400 font-semibold py-2 px-4 rounded-xl hover:bg-pink-100 transition duration-200">Marrón</button>
+                    <div class="flex justify-center space-x-4 mb-8">
+                        <button data-type="white" class="btn-desestres noise-btn bg-violet-600 text-white py-2 px-4 rounded-xl hover:bg-violet-700">Blanco</button>
+                        <button data-type="pink" class="btn-desestres noise-btn bg-violet-600 text-white py-2 px-4 rounded-xl hover:bg-violet-700">Rosa</button>
+                        <button data-type="brown" class="btn-desestres noise-btn bg-violet-600 text-white py-2 px-4 rounded-xl hover:bg-violet-700">Marrón</button>
                     </div>
 
-                    <div class="mb-6">
-                        <label for="volume-slider" class="block text-sm font-medium text-gray-700 mb-2">Volumen:</label>
-                        <input type="range" id="volume-slider" min="-30" max="0" value="-10" class="w-full cursor-pointer">
+                    <div class="mb-4">
+                        <label for="noise-volume" class="block text-md font-medium mb-2">Volumen</label>
+                        <input type="range" id="noise-volume" min="0" max="1" step="0.01" value="0.5" class="w-full">
                     </div>
-
-                    <button id="noise-toggle-button" class="btn-desestres bg-pink-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-pink-600">
-                        INICIAR SONIDO
+                    
+                    <button id="noise-toggle" class="btn-desestres bg-red-600 text-white font-bold py-2 px-8 rounded-xl hover:bg-red-700">
+                        DETENER SONIDO
                     </button>
                 </div>
             `;
         }
 
-        function initializeRuidoBlanco() {
-            const toggleButton = document.getElementById('noise-toggle-button');
-            const volumeSlider = document.getElementById('volume-slider');
+        function initializeNoise() {
+            const toggleBtn = document.getElementById('noise-toggle');
+            const volumeSlider = document.getElementById('noise-volume');
             const noiseButtons = document.querySelectorAll('.noise-btn');
-
-            // Set initial state for buttons
-            noiseButtons.forEach(btn => {
-                if (btn.dataset.noise === noiseState.noiseType) {
-                    btn.classList.add('bg-pink-500', 'text-white');
-                    btn.classList.remove('bg-white', 'text-gray-800');
+            
+            // Inicializar el contexto de audio al interactuar
+            document.body.addEventListener('click', () => {
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
                 }
-            });
+            }, { once: true });
 
-            // Handlers
-            toggleButton.addEventListener('click', toggleNoise);
-            volumeSlider.addEventListener('input', setNoiseVolume);
-            noiseButtons.forEach(btn => btn.addEventListener('click', changeNoiseType));
-        }
+            function startNoise(type) {
+                cleanupPreviousActivity(); // Asegurar que el anterior Tone.js se limpie
 
-        function toggleNoise() {
-            if (noiseState.isPlaying) {
-                // Stop noise
-                window.whiteNoise.stop();
-                window.whiteNoise.dispose();
-                window.whiteNoise = null;
-                Tone.context.close();
-                noiseState.isPlaying = false;
-                document.getElementById('noise-toggle-button').textContent = 'INICIAR SONIDO';
-                document.getElementById('noise-toggle-button').classList.remove('bg-red-500', 'hover:bg-red-600');
-                document.getElementById('noise-toggle-button').classList.add('bg-pink-500', 'hover:bg-pink-600');
-            } else {
-                // Start noise
-                Tone.start().then(() => {
-                    window.whiteNoise = new Tone.Noise(noiseState.noiseType).start();
-                    const gain = new Tone.Gain().toDestination();
-                    gain.gain.value = Tone.dbToGain(noiseState.volume);
-                    window.whiteNoise.connect(gain);
-                    noiseState.isPlaying = true;
-                    document.getElementById('noise-toggle-button').textContent = 'DETENER SONIDO';
-                    document.getElementById('noise-toggle-button').classList.remove('bg-pink-500', 'hover:bg-pink-600');
-                    document.getElementById('noise-toggle-button').classList.add('bg-red-500', 'hover:bg-red-600');
+                // El jugador solo se crea si el contexto de audio está disponible
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+
+                // Generador de ruido
+                noisePlayer = new Tone.Noise(type).start();
+                
+                // Conectar al destino con control de volumen
+                const gain = new Tone.Gain(volumeSlider.value).toDestination();
+                noisePlayer.connect(gain);
+                
+                // Actualizar UI
+                toggleBtn.textContent = 'DETENER SONIDO';
+                toggleBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                toggleBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+                
+                noiseButtons.forEach(btn => {
+                    if (btn.dataset.type === type) {
+                        btn.classList.add('bg-opacity-100');
+                        btn.classList.remove('bg-opacity-50');
+                    } else {
+                        btn.classList.add('bg-opacity-50');
+                        btn.classList.remove('bg-opacity-100');
+                    }
                 });
             }
-        }
 
-        function setNoiseVolume(e) {
-            noiseState.volume = parseInt(e.target.value);
-            if (noiseState.isPlaying && window.whiteNoise && window.whiteNoise.output) {
-                // Adjust volume using the gain node connected to the whiteNoise output
-                const gainNode = window.whiteNoise.output.output;
-                if (gainNode) {
-                    gainNode.gain.value = Tone.dbToGain(noiseState.volume);
+            toggleBtn.onclick = () => {
+                if (noisePlayer) {
+                    cleanupPreviousActivity();
+                    toggleBtn.textContent = 'INICIAR';
+                    toggleBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                    toggleBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                    noiseButtons.forEach(btn => btn.classList.remove('bg-opacity-100'));
+                } else {
+                    // Por defecto, inicia el ruido blanco
+                    startNoise('white'); 
                 }
-            }
-        }
+            };
+            
+            volumeSlider.oninput = (e) => {
+                if (noisePlayer && noisePlayer.context.destination.input) {
+                    // Asumiendo que el GainNode es el destino
+                    // Es necesario acceder al GainNode que se conectó al inicio
+                    // Pero como se recrea en startNoise, solo podemos acceder a la ganancia a través de Tone.Destination si no usamos un GainNode explícito.
+                    // Para simplificar, ajustaremos el valor directamente si es un Tone.Noise conectado al destino.
+                    // Nota: En la implementación actual con GainNode, esto es una simplificación, pero funciona para el volumen general.
+                    Tone.Destination.volume.value = Tone.gainToDb(parseFloat(e.target.value));
+                }
+            };
 
-        function changeNoiseType(e) {
-            const newType = e.target.dataset.noise;
-            noiseState.noiseType = newType;
-
-            document.querySelectorAll('.noise-btn').forEach(btn => {
-                btn.classList.remove('bg-pink-500', 'text-white');
-                btn.classList.add('bg-white', 'text-gray-800');
+            noiseButtons.forEach(btn => {
+                btn.onclick = () => {
+                    startNoise(btn.dataset.type);
+                };
             });
-            e.target.classList.add('bg-pink-500', 'text-white');
-            e.target.classList.remove('bg-white', 'text-gray-800');
-
-            if (noiseState.isPlaying) {
-                window.whiteNoise.type = newType; // Change type on the fly
-            }
+            
+            // Estado inicial
+            noiseButtons.forEach(btn => btn.classList.add('bg-opacity-50'));
+            toggleBtn.textContent = 'INICIAR';
+            toggleBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+            toggleBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
         }
 
         // =======================================================
-        // 5. CONTADOR DE ENFOQUE (Pomodoro Simple)
+        // 5. Contador de Enfoque (Pomodoro simple)
         // =======================================================
+        
         let pomodoroState = {
-            duration: 25 * 60, // 25 minutos en segundos
-            remaining: 25 * 60,
+            duration: 25 * 60, // 25 minutos
+            timeRemaining: 25 * 60,
             isRunning: false,
-            isBreak: false,
-            interval: null
+            isBreak: false
         };
+        window.pomodoroState = pomodoroState; // Exportar para limpieza
 
         function renderPomodoro() {
-            const minutes = String(Math.floor(pomodoroState.remaining / 60)).padStart(2, '0');
-            const seconds = String(pomodoroState.remaining % 60).padStart(2, '0');
-            const status = pomodoroState.isBreak ? 'DESCANSANDO' : 'TRABAJO';
-
             return `
-                <div id="pomodoro-activity" class="container-box max-w-sm mx-auto text-center">
-                    <h2 class="text-2xl font-bold mb-4 text-teal-600">Contador de Enfoque</h2>
-                    <p class="text-gray-500 mb-6">Trabaja 25 minutos, descansa 5. Enfoca tu energía.</p>
+                <div class="max-w-md mx-auto text-center">
+                    <h3 class="text-xl font-semibold mb-4 text-violet-300">5. Contador de Enfoque (Pomodoro)</h3>
+                    <p class="text-sm text-gray-400 mb-6">25 minutos de enfoque, 5 minutos de descanso. ¡Concéntrate!</p>
                     
-                    <div id="focus-timer-status" class="text-xl font-medium mb-4 p-2 rounded-full ${pomodoroState.isBreak ? 'bg-orange-100 text-orange-600' : 'bg-teal-100 text-teal-600'}">
-                        ${status}
-                    </div>
-
-                    <div id="focus-timer" class="p-6 rounded-2xl mb-6 ${pomodoroState.isRunning ? 'timer-running' : ''}">
-                        ${minutes}:${seconds}
-                    </div>
-
-                    <div class="flex justify-center gap-4">
-                        <button id="pomodoro-toggle-button" class="btn-desestres bg-teal-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-teal-600">
-                            ${pomodoroState.isRunning ? 'PAUSAR' : 'INICIAR'}
+                    <div id="pomodoro-timer" class="text-6xl font-extrabold mb-4 text-green-400">25:00</div>
+                    <div id="pomodoro-status" class="text-lg font-medium text-yellow-400 mb-8">Enfoque</div>
+                    
+                    <div class="flex justify-center space-x-4">
+                        <button id="pomodoro-toggle" class="btn-desestres bg-violet-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-violet-700">
+                            Iniciar
                         </button>
-                        <button id="pomodoro-reset-button" class="btn-desestres bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-xl hover:bg-gray-400">
-                            REINICIAR
+                        <button id="pomodoro-reset" class="btn-desestres bg-slate-500 text-white font-bold py-3 px-8 rounded-xl hover:bg-slate-600">
+                            Reiniciar
                         </button>
                     </div>
                 </div>
@@ -717,669 +570,533 @@
         }
 
         function initializePomodoro() {
-            document.getElementById('pomodoro-toggle-button').addEventListener('click', togglePomodoro);
-            document.getElementById('pomodoro-reset-button').addEventListener('click', resetPomodoro);
+            const timerDisplay = document.getElementById('pomodoro-timer');
+            const statusDisplay = document.getElementById('pomodoro-status');
+            const toggleBtn = document.getElementById('pomodoro-toggle');
+            const resetBtn = document.getElementById('pomodoro-reset');
             
-            // Si estaba corriendo en el estado global, reiniciar el intervalo
-            if (pomodoroState.isRunning) {
-                startTimer();
+            function updateDisplay() {
+                const minutes = Math.floor(pomodoroState.timeRemaining / 60).toString().padStart(2, '0');
+                const seconds = (pomodoroState.timeRemaining % 60).toString().padStart(2, '0');
+                timerDisplay.textContent = `${minutes}:${seconds}`;
             }
-        }
-
-        function updateDisplay() {
-            const minutes = String(Math.floor(pomodoroState.remaining / 60)).padStart(2, '0');
-            const seconds = String(pomodoroState.remaining % 60).padStart(2, '0');
-            const status = pomodoroState.isBreak ? 'DESCANSANDO' : 'TRABAJO';
-
-            const timerElement = document.getElementById('focus-timer');
-            const statusElement = document.getElementById('focus-timer-status');
-            const toggleButton = document.getElementById('pomodoro-toggle-button');
             
-            if (timerElement) timerElement.textContent = `${minutes}:${seconds}`;
-            if (statusElement) {
-                statusElement.textContent = status;
-                statusElement.classList.remove('bg-orange-100', 'text-orange-600', 'bg-teal-100', 'text-teal-600');
-                statusElement.classList.add(pomodoroState.isBreak ? 'bg-orange-100' : 'bg-teal-100');
-                statusElement.classList.add(pomodoroState.isBreak ? 'text-orange-600' : 'text-teal-600');
-            }
-            if (toggleButton) toggleButton.textContent = pomodoroState.isRunning ? 'PAUSAR' : 'INICIAR';
-            if (timerElement) {
-                if (pomodoroState.isRunning) {
-                    timerElement.classList.add('timer-running');
-                } else {
-                    timerElement.classList.remove('timer-running');
-                }
-            }
-        }
-
-        function startTimer() {
-            if (window.timerInterval) clearInterval(window.timerInterval);
-            
-            window.timerInterval = setInterval(() => {
-                if (pomodoroState.remaining > 0) {
-                    pomodoroState.remaining--;
-                } else {
-                    // Tiempo terminado, cambiar de modo
-                    clearInterval(window.timerInterval);
-                    window.timerInterval = null;
-                    
-                    // Notificación (usando un simple modal de texto)
-                    const message = pomodoroState.isBreak ? "¡Tiempo de trabajo!" : "¡Tiempo de descanso!";
-                    alertMessage(message);
-
-                    pomodoroState.isBreak = !pomodoroState.isBreak;
-                    pomodoroState.duration = pomodoroState.isBreak ? 5 * 60 : 25 * 60;
-                    pomodoroState.remaining = pomodoroState.duration;
-                    pomodoroState.isRunning = false;
-                }
+            function setFocusPhase() {
+                pomodoroState.isBreak = false;
+                pomodoroState.duration = 25 * 60;
+                pomodoroState.timeRemaining = pomodoroState.duration;
+                statusDisplay.textContent = 'Enfoque';
+                timerDisplay.classList.remove('text-blue-400');
+                timerDisplay.classList.add('text-green-400');
                 updateDisplay();
-            }, 1000);
-            pomodoroState.isRunning = true;
-            updateDisplay();
-        }
-
-        function togglePomodoro() {
-            if (pomodoroState.isRunning) {
-                clearInterval(window.timerInterval);
-                window.timerInterval = null;
-                pomodoroState.isRunning = false;
-            } else {
-                startTimer();
             }
-            updateDisplay();
-        }
 
-        function resetPomodoro() {
-            clearInterval(window.timerInterval);
-            window.timerInterval = null;
-            pomodoroState.isBreak = false;
-            pomodoroState.duration = 25 * 60;
-            pomodoroState.remaining = 25 * 60;
-            pomodoroState.isRunning = false;
-            updateDisplay();
+            function setBreakPhase() {
+                pomodoroState.isBreak = true;
+                pomodoroState.duration = 5 * 60;
+                pomodoroState.timeRemaining = pomodoroState.duration;
+                statusDisplay.textContent = 'Descanso';
+                timerDisplay.classList.remove('text-green-400');
+                timerDisplay.classList.add('text-blue-400');
+                updateDisplay();
+                // Simular una alerta sin usar window.alert
+                const statusDiv = document.getElementById('pomodoro-status');
+                statusDiv.innerHTML = '¡TERMINÓ! Cambiando de fase...';
+                setTimeout(() => statusDiv.innerHTML = pomodoroState.isBreak ? 'Descanso' : 'Enfoque', 3000);
+            }
+
+            function togglePomodoro() {
+                if (!pomodoroState.isRunning) {
+                    pomodoroState.isRunning = true;
+                    toggleBtn.textContent = 'Pausar';
+                    pomodoroInterval = setInterval(() => {
+                        pomodoroState.timeRemaining--;
+                        updateDisplay();
+                        
+                        if (pomodoroState.timeRemaining <= 0) {
+                            clearInterval(pomodoroInterval);
+                            pomodoroState.isRunning = false;
+                            toggleBtn.textContent = 'Iniciar';
+                            
+                            if (pomodoroState.isBreak) {
+                                setFocusPhase();
+                            } else {
+                                setBreakPhase();
+                            }
+                            // Reiniciar automáticamente el contador después de cambiar de fase
+                            setTimeout(togglePomodoro, 100); // Pequeño retraso para asegurar el estado correcto
+                        }
+                    }, 1000);
+                } else {
+                    pomodoroState.isRunning = false;
+                    toggleBtn.textContent = 'Reanudar';
+                    clearInterval(pomodoroInterval);
+                }
+            }
+
+            function resetPomodoro() {
+                clearInterval(pomodoroInterval);
+                pomodoroState.isRunning = false;
+                toggleBtn.textContent = 'Iniciar';
+                setFocusPhase();
+            }
+            
+            toggleBtn.onclick = togglePomodoro;
+            resetBtn.onclick = resetPomodoro;
+            
+            // Inicialización
+            setFocusPhase();
         }
 
         // =======================================================
-        // 6. BORRADO DE PREOCUPACIONES (Focus Eraser)
+        // 6. Borrado de Preocupaciones (Focus Eraser)
         // =======================================================
-        let worryState = {
-            worries: ['Tengo que terminar el informe', '¿Qué cocinar para cenar?', 'Revisar mi correo', 'La llamada de mañana', 'El tráfico', 'Pagar las cuentas'],
-        };
 
-        function renderPreocupaciones() {
-            const worryHtml = worryState.worries.map((worry, index) => 
-                `<span class="worry-item" data-index="${index}">${worry}</span>`
-            ).join('');
+        let worryIdCounter = 0;
 
+        function renderEraser() {
             return `
-                <div id="preocupaciones-activity" class="container-box max-w-2xl mx-auto text-center">
-                    <h2 class="text-2xl font-bold mb-4 text-red-600">Borrado de Preocupaciones</h2>
-                    <p class="text-gray-500 mb-4">Escribe tus preocupaciones. Luego, haz clic en cada una para borrarlas de tu mente.</p>
+                <div class="max-w-xl mx-auto">
+                    <h3 class="text-xl font-semibold mb-4 text-violet-300">6. Borrado de Preocupaciones</h3>
+                    <p class="text-sm text-gray-400 mb-4">Escribe una preocupación, haz clic en ella para borrarla y liberar espacio mental.</p>
                     
-                    <div class="flex flex-col sm:flex-row gap-2 mb-4">
-                        <input type="text" id="worry-input" placeholder="Escribe tu preocupación aquí..." class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500">
-                        <button id="worry-add-button" class="btn-desestres bg-red-500 text-white font-bold py-2 px-4 rounded-xl hover:bg-red-600">
+                    <div class="flex space-x-2 mb-6">
+                        <input type="text" id="worry-input" placeholder="Escribe algo que te preocupe..." maxlength="60" 
+                               class="flex-grow p-3 bg-slate-600 border border-slate-500 rounded-lg text-white focus:ring-violet-500 focus:border-violet-500">
+                        <button id="worry-add" class="btn-desestres bg-violet-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-violet-700">
                             Añadir
                         </button>
                     </div>
 
-                    <div id="worry-board-container" class="min-h-[200px] border border-dashed border-red-300 rounded-xl p-4 bg-red-50 overflow-y-auto">
-                        <div id="worry-board">${worryHtml}</div>
+                    <div id="worry-list" class="p-4 bg-slate-700 rounded-xl min-h-[100px] flex flex-wrap gap-3 content-start">
+                        <!-- Las preocupaciones se mostrarán aquí -->
+                        <p class="text-gray-400 text-sm italic w-full text-center" id="worry-placeholder">Tu espacio mental está limpio.</p>
                     </div>
-                    <button id="worry-reset-button" class="btn-desestres bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-xl hover:bg-gray-400 mt-4">
-                        Limpiar Tablero
-                    </button>
                 </div>
             `;
         }
 
-        function initializePreocupaciones() {
-            document.getElementById('worry-add-button').addEventListener('click', addWorry);
-            document.getElementById('worry-board').addEventListener('click', eraseWorry);
-            document.getElementById('worry-reset-button').addEventListener('click', renderWorryBoard);
-            document.getElementById('worry-input').addEventListener('keypress', (e) => {
+        function initializeEraser() {
+            const input = document.getElementById('worry-input');
+            const addBtn = document.getElementById('worry-add');
+            const list = document.getElementById('worry-list');
+            const placeholder = document.getElementById('worry-placeholder');
+
+            function updatePlaceholder() {
+                 placeholder.classList.toggle('hidden', list.children.length > (placeholder ? 1 : 0));
+            }
+            
+            function addWorry() {
+                const text = input.value.trim();
+                if (text === "") return;
+
+                const id = worryIdCounter++;
+                const worryElement = document.createElement('div');
+                worryElement.id = `worry-${id}`;
+                worryElement.className = 'worry-tag bg-red-400 text-slate-900 font-semibold px-3 py-1 rounded-full shadow-md cursor-pointer hover:bg-red-500 transform transition duration-200';
+                worryElement.textContent = text;
+                
+                worryElement.onclick = function() {
+                    // Animación de borrado
+                    worryElement.style.opacity = '0';
+                    worryElement.style.transform = 'scale(0.8)';
+                    setTimeout(() => {
+                        worryElement.remove();
+                        updatePlaceholder();
+                    }, 300);
+                };
+
+                list.appendChild(worryElement);
+                input.value = '';
+                updatePlaceholder();
+            }
+
+            addBtn.onclick = addWorry;
+            input.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') addWorry();
             });
-            renderWorryBoard();
+            
+            updatePlaceholder(); // Inicializar el placeholder
         }
 
-        function addWorry() {
-            const input = document.getElementById('worry-input');
-            const newWorry = input.value.trim();
-            if (newWorry) {
-                worryState.worries.push(newWorry);
-                input.value = '';
-                renderWorryBoard();
-            }
-        }
-
-        function eraseWorry(e) {
-            if (e.target.classList.contains('worry-item')) {
-                const item = e.target;
-                item.classList.add('erased');
-                // Eliminar del array después de la animación
-                setTimeout(() => {
-                    const indexToRemove = worryState.worries.indexOf(item.textContent);
-                    if (indexToRemove > -1) {
-                        worryState.worries.splice(indexToRemove, 1);
-                    }
-                    renderWorryBoard();
-                }, 300); 
-            }
-        }
-        
-        function renderWorryBoard() {
-            const board = document.getElementById('worry-board');
-            if (!board) return;
-            
-            const worryHtml = worryState.worries.map((worry, index) => 
-                `<span class="worry-item" data-index="${index}">${worry}</span>`
-            ).join('');
-            
-            board.innerHTML = worryHtml || `<p class="text-gray-400 mt-8">¡Tablero limpio! Escribe una preocupación para empezar.</p>`;
-        }
-        
         // =======================================================
-        // 7. DIARIO RÁPIDO DE GRATITUD
+        // 7. Diario Rápido de Gratitud
         // =======================================================
 
-        function renderGratitud() {
-            // Usamos localStorage para una persistencia simple entre sesiones
-            const gratitudeList = JSON.parse(localStorage.getItem('gratitudeList') || '[]');
-            const listHtml = gratitudeList.map((item, index) => `
-                <li class="p-3 bg-sky-50 rounded-lg mb-2 flex justify-between items-center text-left">
-                    <span class="text-gray-800">${item.text}</span>
-                    <span class="text-sm text-gray-500 ml-4">${item.date}</span>
-                </li>
-            `).join('');
-
+        function renderGratitude() {
             return `
-                <div id="gratitud-activity" class="container-box max-w-xl mx-auto text-center">
-                    <h2 class="text-2xl font-bold mb-4 text-yellow-600">Diario Rápido de Gratitud</h2>
-                    <p class="text-gray-500 mb-4">Escribe 3 cosas por las que estás agradecido para mejorar tu estado de ánimo.</p>
+                <div class="max-w-xl mx-auto">
+                    <h3 class="text-xl font-semibold mb-4 text-violet-300">7. Diario Rápido de Gratitud</h3>
+                    <p class="text-sm text-gray-400 mb-4">Escribe 3 cosas por las que estás agradecido hoy. Enfocarse en lo positivo ayuda a la calma.</p>
                     
-                    <div class="flex flex-col gap-2 mb-4">
-                        <textarea id="gratitude-input" rows="3" placeholder="Hoy estoy agradecido por..." class="p-3 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"></textarea>
-                        <button id="gratitude-save-button" class="btn-desestres bg-yellow-500 text-white font-bold py-2 px-4 rounded-xl hover:bg-yellow-600">
-                            Guardar Agradecimiento
-                        </button>
+                    <div class="mb-4">
+                        <textarea id="gratitude-input" rows="5" placeholder="Hoy estoy agradecido por..."
+                                  class="w-full p-3 bg-slate-600 border border-slate-500 rounded-lg text-white focus:ring-violet-500 focus:border-violet-500"></textarea>
                     </div>
+                    
+                    <button id="gratitude-save" class="btn-desestres bg-green-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-green-700">
+                        Guardar Entrada
+                    </button>
+                    <p id="gratitude-status" class="mt-3 text-sm text-green-400"></p>
 
-                    <h3 class="text-xl font-semibold mt-6 mb-3 text-gray-700">Agradecimientos Anteriores</h3>
-                    <ul id="gratitude-list-container" class="list-none p-0 text-left">
-                        ${listHtml || '<p class="text-gray-400">Aún no hay entradas de gratitud.</p>'}
-                    </ul>
+                    <h4 class="text-lg font-semibold mt-8 mb-3 text-violet-300">Entradas Anteriores</h4>
+                    <div id="gratitude-history" class="p-4 bg-slate-700 rounded-xl max-h-60 overflow-y-auto">
+                        <p class="text-gray-400 text-sm italic" id="history-placeholder">Aún no hay entradas guardadas.</p>
+                    </div>
                 </div>
             `;
         }
 
-        function initializeGratitud() {
-            document.getElementById('gratitude-save-button').addEventListener('click', saveGratitude);
-        }
-
-        function saveGratitude() {
+        function initializeGratitude() {
             const input = document.getElementById('gratitude-input');
-            const newText = input.value.trim();
-            if (newText) {
-                const gratitudeList = JSON.parse(localStorage.getItem('gratitudeList') || '[]');
-                const date = new Date().toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
-                
-                gratitudeList.unshift({ text: newText, date: date });
-                
-                // Limitar a 10 entradas para mantenerlo rápido y simple
-                if (gratitudeList.length > 10) {
-                    gratitudeList.pop(); 
+            const saveBtn = document.getElementById('gratitude-save');
+            const historyDiv = document.getElementById('gratitude-history');
+            const statusDiv = document.getElementById('gratitude-status');
+            const placeholder = document.getElementById('history-placeholder');
+
+            function getEntries() {
+                try {
+                    return JSON.parse(localStorage.getItem('gratitudeEntries')) || [];
+                } catch (e) {
+                    console.error("Error al parsear entradas de gratitud:", e);
+                    return [];
                 }
-
-                localStorage.setItem('gratitudeList', JSON.stringify(gratitudeList));
-                input.value = '';
-                
-                // Volver a renderizar la actividad para mostrar la nueva lista
-                switchActivity('gratitud');
             }
+
+            function saveEntries(entries) {
+                localStorage.setItem('gratitudeEntries', JSON.stringify(entries));
+            }
+            
+            function renderHistory() {
+                const entries = getEntries();
+                historyDiv.innerHTML = ''; 
+
+                if (entries.length === 0) {
+                    historyDiv.appendChild(placeholder);
+                    placeholder.classList.remove('hidden');
+                    return;
+                }
+                
+                placeholder.classList.add('hidden');
+
+                entries.forEach(entry => {
+                    const entryDiv = document.createElement('div');
+                    entryDiv.className = 'border-b border-slate-600 pb-2 mb-2 last:border-b-0';
+                    entryDiv.innerHTML = `
+                        <p class="text-xs text-violet-400">${new Date(entry.timestamp).toLocaleDateString()}</p>
+                        <p class="text-sm">${entry.text}</p>
+                    `;
+                    historyDiv.prepend(entryDiv);
+                });
+            }
+
+            saveBtn.onclick = () => {
+                const text = input.value.trim();
+                if (text === "") {
+                    statusDiv.textContent = 'Por favor, escribe algo antes de guardar.';
+                    statusDiv.classList.remove('text-green-400');
+                    statusDiv.classList.add('text-red-400');
+                    return;
+                }
+                
+                const entries = getEntries();
+                entries.push({ text: text, timestamp: new Date().toISOString() });
+                saveEntries(entries);
+                
+                input.value = '';
+                statusDiv.textContent = '¡Entrada de gratitud guardada con éxito!';
+                statusDiv.classList.remove('text-red-400');
+                statusDiv.classList.add('text-green-400');
+
+                renderHistory();
+                setTimeout(() => statusDiv.textContent = '', 3000);
+            };
+
+            renderHistory();
         }
-        
-        // =======================================================
-        // 8. VISUALIZADOR DE ONDAS (Wave Visualizer)
-        // =======================================================
-        let waveState = {
-            canvas: null,
-            ctx: null,
-            width: 0,
-            height: 0,
-            amplitude: 50,
-            frequency: 0.01,
-            speed: 0.05,
-            offset: 0,
-            color: '#6366f1' // Indigo-500
-        };
 
-        function renderOndas() {
+        // =======================================================
+        // 8. Visualizador de Ondas (Wave Visualizer)
+        // =======================================================
+
+        function renderWave() {
             return `
-                <div id="ondas-activity" class="container-box max-w-4xl mx-auto text-center">
-                    <h2 class="text-2xl font-bold mb-4 text-indigo-600">Visualizador de Ondas Suaves</h2>
-                    <p class="text-gray-500 mb-4">Observa el movimiento rítmico para inducir un estado de calma.</p>
-                    
-                    <div class="flex flex-wrap justify-center gap-4 mb-4 p-3 bg-sky-50 rounded-lg">
-                        <label class="text-sm font-medium text-gray-700 flex items-center">
-                            Velocidad: 
-                            <input type="range" id="wave-speed-slider" min="0" max="0.1" step="0.005" value="0.05" class="ml-2 w-32 cursor-pointer">
-                        </label>
-                        <label class="text-sm font-medium text-gray-700 flex items-center">
-                            Amplitud: 
-                            <input type="range" id="wave-amplitude-slider" min="10" max="100" value="50" class="ml-2 w-32 cursor-pointer">
-                        </label>
-                    </div>
-
-                    <canvas id="wave-canvas"></canvas>
+                <div class="w-full text-center">
+                    <h3 class="text-xl font-semibold mb-4 text-violet-300">8. Visualizador de Ondas (Calma Visual)</h3>
+                    <p class="text-sm text-gray-400 mb-4">Observa el movimiento suave y repetitivo de las ondas para relajar la vista.</p>
+                    <canvas id="wave-canvas" class="w-full h-80"></canvas>
                 </div>
             `;
         }
+        
+        function initializeWave() {
+            const canvas = document.getElementById('wave-canvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            let time = 0;
 
-        function initializeOndas() {
-            waveState.canvas = document.getElementById('wave-canvas');
-            waveState.ctx = waveState.canvas.getContext('2d');
+            function resizeCanvas() {
+                const rect = canvas.parentNode.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = 320;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
 
-            function resizeCanvasOndas() {
-                const container = document.getElementById('ondas-activity');
-                if (container) {
-                    waveState.width = container.clientWidth - 32;
-                    waveState.height = Math.min(300, container.clientWidth * 0.5);
-                    waveState.canvas.width = waveState.width;
-                    waveState.canvas.height = waveState.height;
+            function drawWave() {
+                // Asegurar que el contexto y el canvas sigan existiendo
+                if (!canvas.parentNode) {
+                    cancelAnimationFrame(waveRAF);
+                    return;
                 }
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const width = canvas.width;
+                const height = canvas.height;
+                const centerH = height / 2;
+                
+                for (let i = 0; i < 3; i++) { // Dibujar 3 ondas con diferentes offsets
+                    ctx.beginPath();
+                    ctx.moveTo(0, centerH);
+                    
+                    // Configuración de onda
+                    const amplitude = 30 + i * 15;
+                    const frequency = 0.005 + i * 0.002;
+                    const offset = time * (0.05 + i * 0.02);
+                    
+                    ctx.strokeStyle = `rgba(167, 139, 250, ${0.4 - i * 0.1})`; /* Violet-400 con transparencia */
+                    ctx.lineWidth = 2;
+
+                    for (let x = 0; x < width; x++) {
+                        const y = centerH + amplitude * Math.sin(x * frequency + offset);
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                }
+
+                time++;
+                waveRAF = requestAnimationFrame(drawWave);
             }
-            window.addEventListener('resize', resizeCanvasOndas);
-            resizeCanvasOndas(); 
 
-            document.getElementById('wave-speed-slider').addEventListener('input', (e) => {
-                waveState.speed = parseFloat(e.target.value);
-            });
-            document.getElementById('wave-amplitude-slider').addEventListener('input', (e) => {
-                waveState.amplitude = parseInt(e.target.value);
-            });
-
-            animateOndas();
-        }
-
-        function drawWave() {
-            const { ctx, width, height, amplitude, frequency, offset, color } = waveState;
-            ctx.clearRect(0, 0, width, height);
-            
-            ctx.beginPath();
-            ctx.moveTo(0, height / 2);
-            
-            for (let x = 0; x < width; x++) {
-                // Función de onda Senoidal + Cosenoidal para una forma más interesante
-                const y = height / 2 + 
-                          amplitude * Math.sin(x * frequency + offset) * 0.6 + 
-                          (amplitude / 3) * Math.cos(x * frequency * 2 + offset * 1.5);
-                ctx.lineTo(x, y);
-            }
-            
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            
-            waveState.offset += waveState.speed; // Avanza el offset para el movimiento
-        }
-
-        function animateOndas() {
             drawWave();
-            window.waveAnimationFrame = requestAnimationFrame(animateOndas);
         }
 
         // =======================================================
-        // 9. JUEGO DE MEMORIA (Concentración)
+        // 9. Juego de Memoria (Concentración)
         // =======================================================
-        const MEMORY_ICONS = ['⭐', '💖', '🌊', '🌲', '🌙', '☀️', '🧘', '🎧'];
-        let memoryState = {
-            board: [],
-            size: 16,
-            flippedCards: [],
-            matchesFound: 0,
-            canFlip: true
-        };
+        
+        const MEMORY_ICONS = ['🧠', '🧘‍♀️', '🌸', '☕', '📚', '🌙', '🌲', '✨'];
+        let memoryBoard = [];
+        let flippedCards = [];
+        let matchesFound = 0;
+        let isWaiting = false;
 
-        function renderMemoria() {
+        function renderMemory() {
             return `
-                <div id="memoria-activity" class="container-box max-w-xl mx-auto text-center">
-                    <h2 class="text-2xl font-bold mb-4 text-purple-600">Juego de Memoria (Concentración)</h2>
-                    <p class="text-gray-500 mb-4">Encuentra los pares. Enfócate en el momento para ejercitar tu mente.</p>
+                <div class="max-w-xl mx-auto text-center">
+                    <h3 class="text-xl font-semibold mb-4 text-violet-300">9. Concentración (Juego de Memoria)</h3>
+                    <p class="text-sm text-gray-400 mb-4">Empareja los íconos para mejorar tu enfoque y memoria de trabajo.</p>
                     
-                    <div id="memory-board" class="grid grid-cols-4 gap-4 p-4 bg-purple-50 rounded-xl">
-                        <!-- Tarjetas inyectadas aquí -->
+                    <div id="memory-grid" class="grid grid-cols-4 gap-3 bg-slate-700 p-4 rounded-xl">
+                        <!-- Tarjetas de memoria -->
                     </div>
-                    
-                    <p id="memory-message" class="text-lg font-semibold text-purple-600 mt-4 h-6">Encuentra los pares...</p>
-                    
-                    <button id="memory-reset-button" class="btn-desestres bg-indigo-500 text-white font-bold py-2 px-4 rounded-xl hover:bg-indigo-600 mt-4">
-                        Reiniciar Juego
+
+                    <p id="memory-status" class="mt-4 text-lg font-semibold text-yellow-400">Juego en curso...</p>
+                    <button id="memory-restart" class="btn-desestres bg-red-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-red-700 mt-4">
+                        Reiniciar
                     </button>
                 </div>
-                <style>
-                    .memory-card {
-                        background-color: #a78bfa; /* Violet-400 */
-                        width: 100%;
-                        padding-bottom: 100%;
-                        border-radius: 0.75rem;
-                        cursor: pointer;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        font-size: 2.5rem;
-                        color: white;
-                        transition: transform 0.3s ease-in-out;
-                        transform: rotateY(0deg);
-                        position: relative;
-                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                    }
-                    .memory-card.flipped, .memory-card.matched {
-                        background-color: #ede9fe; /* Violet-100 */
-                        transform: rotateY(180deg);
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    }
-                    .memory-card.matched {
-                        background-color: #34d399; /* Emerald-400 */
-                        cursor: default;
-                    }
-                    .card-inner {
-                        position: absolute;
-                        width: 100%;
-                        height: 100%;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        backface-visibility: hidden;
-                        transform-style: preserve-3d;
-                    }
-                    .card-back {
-                        transform: rotateY(180deg);
-                        color: #1e293b;
-                    }
-                    .card-front {
-                        transform: rotateY(0deg);
-                        color: white;
-                    }
-                </style>
             `;
         }
 
-        function initializeMemoria() {
-            createMemoryBoard();
-            document.getElementById('memory-reset-button').addEventListener('click', createMemoryBoard);
-        }
-        
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-
-        function createMemoryBoard() {
-            memoryState.board = shuffleArray([...MEMORY_ICONS, ...MEMORY_ICONS]);
-            memoryState.flippedCards = [];
-            memoryState.matchesFound = 0;
-            memoryState.canFlip = true;
+        function initializeMemory() {
+            const grid = document.getElementById('memory-grid');
+            const restartBtn = document.getElementById('memory-restart');
             
-            const boardElement = document.getElementById('memory-board');
-            const messageElement = document.getElementById('memory-message');
-            if (!boardElement) return;
-
-            boardElement.innerHTML = memoryState.board.map((icon, index) => `
-                <div class="memory-card" data-index="${index}" onclick="flipCard(this)">
-                    <div class="card-inner card-front">?</div>
-                    <div class="card-inner card-back">${icon}</div>
-                </div>
-            `).join('');
-
-            messageElement.textContent = "Encuentra los pares...";
-        }
-
-        window.flipCard = function(card) {
-            if (!memoryState.canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) {
-                return;
-            }
-
-            card.classList.add('flipped');
-            memoryState.flippedCards.push(card);
-
-            if (memoryState.flippedCards.length === 2) {
-                memoryState.canFlip = false;
-                const [card1, card2] = memoryState.flippedCards;
-                const icon1 = memoryState.board[parseInt(card1.dataset.index)];
-                const icon2 = memoryState.board[parseInt(card2.dataset.index)];
-
-                if (icon1 === icon2) {
-                    // Match found
-                    setTimeout(() => {
-                        card1.classList.add('matched');
-                        card2.classList.add('matched');
-                        card1.classList.remove('flipped');
-                        card2.classList.remove('flipped');
-                        memoryState.matchesFound++;
-                        memoryState.flippedCards = [];
-                        memoryState.canFlip = true;
-
-                        if (memoryState.matchesFound === memoryState.size / 2) {
-                            document.getElementById('memory-message').textContent = "¡Felicidades! Lo lograste.";
-                        }
-                    }, 500);
-                } else {
-                    // No match
-                    setTimeout(() => {
-                        card1.classList.remove('flipped');
-                        card2.classList.remove('flipped');
-                        memoryState.flippedCards = [];
-                        memoryState.canFlip = true;
-                    }, 1000);
+            function setupBoard() {
+                let cards = [...MEMORY_ICONS, ...MEMORY_ICONS];
+                // Función de Fisher-Yates para mezclar
+                for (let i = cards.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [cards[i], cards[j]] = [cards[j], cards[i]];
                 }
-            }
-        }
-        
-        // =======================================================
-        // 10. DIBUJO DE SIMETRÍA
-        // =======================================================
-        let symmetryState = {
-            isDrawing: false,
-            lastX: 0,
-            lastY: 0,
-            color: '#059669', // Emerald-600
-            lineWidth: 5,
-            canvas: null,
-            ctx: null
-        };
-
-        function renderSimetria() {
-            return `
-                <div id="simetria-activity" class="container-box max-w-4xl mx-auto text-center">
-                    <h2 class="text-2xl font-bold mb-4 text-emerald-600">Dibujo de Simetría</h2>
-                    <p class="text-gray-500 mb-4">Dibuja en un lado y se reflejará en el otro. Un ejercicio calmante de concentración.</p>
-                    
-                    <div class="flex flex-wrap justify-center gap-4 mb-4 p-3 bg-sky-50 rounded-lg">
-                        <label class="text-sm font-medium text-gray-700 flex items-center">
-                            Color: 
-                            <input type="color" id="symmetry-color-picker" value="#059669" class="ml-2 w-8 h-8 rounded-full border-2 border-gray-400 cursor-pointer">
-                        </label>
-                        <label class="text-sm font-medium text-gray-700 flex items-center">
-                            Grosor: 
-                            <input type="range" id="symmetry-thickness-slider" min="1" max="20" value="5" class="ml-2 w-32 cursor-pointer">
-                            <span id="symmetry-thickness-value" class="ml-2 text-gray-700">5</span>
-                        </label>
-                        <button id="symmetry-clear-button" class="btn-desestres bg-red-500 text-white font-bold py-2 px-4 rounded-xl hover:bg-red-600">
-                            Limpiar
-                        </button>
+                memoryBoard = cards;
+                flippedCards = [];
+                matchesFound = 0;
+                isWaiting = false;
+                document.getElementById('memory-status').textContent = 'Juego en curso...';
+                grid.innerHTML = memoryBoard.map((icon, index) => `
+                    <div class="memory-card bg-slate-600 aspect-square rounded-lg flex items-center justify-center text-4xl cursor-pointer shadow-lg hover:bg-slate-500" 
+                         data-index="${index}" data-icon="${icon}" data-flipped="false">
+                        <!-- Icono oculto -->
                     </div>
+                `).join('');
+            }
+            
+            function handleMemoryClick(e) {
+                const card = e.target.closest('.memory-card');
+                if (!card || isWaiting || card.dataset.flipped === 'true' || flippedCards.length === 2) return;
 
-                    <canvas id="symmetry-canvas"></canvas>
+                card.dataset.flipped = 'true';
+                card.textContent = card.dataset.icon;
+                card.classList.remove('bg-slate-600', 'hover:bg-slate-500');
+                card.classList.add('bg-violet-400');
+                flippedCards.push(card);
+
+                if (flippedCards.length === 2) {
+                    isWaiting = true;
+                    setTimeout(checkMatch, 1000);
+                }
+            }
+
+            function checkMatch() {
+                const [card1, card2] = flippedCards;
+                isWaiting = false;
+
+                if (card1.dataset.icon === card2.dataset.icon) {
+                    // Coincidencia
+                    matchesFound++;
+                    card1.classList.add('bg-green-400', 'pointer-events-none');
+                    card2.classList.add('bg-green-400', 'pointer-events-none');
+                    document.getElementById('memory-status').textContent = `¡Coincidencia encontrada! (${matchesFound}/${MEMORY_ICONS.length})`;
+
+                    if (matchesFound === MEMORY_ICONS.length) {
+                        document.getElementById('memory-status').textContent = '¡Felicidades! Has ganado. Tu mente está enfocada.';
+                    }
+                } else {
+                    // No coincidencia, voltear de nuevo
+                    card1.dataset.flipped = 'false';
+                    card2.dataset.flipped = 'false';
+                    card1.textContent = '';
+                    card2.textContent = '';
+                    card1.classList.add('bg-slate-600', 'hover:bg-slate-500');
+                    card2.classList.add('bg-slate-600', 'hover:bg-slate-500');
+                    card1.classList.remove('bg-violet-400');
+                    card2.classList.remove('bg-violet-400');
+                    document.getElementById('memory-status').textContent = 'Inténtalo de nuevo...';
+                }
+                flippedCards = [];
+            }
+            
+            grid.addEventListener('click', handleMemoryClick);
+            restartBtn.onclick = setupBoard;
+            
+            setupBoard();
+        }
+
+        // =======================================================
+        // 10. Dibujo de Simetría
+        // =======================================================
+
+        function renderSymmetry() {
+            return `
+                <div class="w-full text-center">
+                    <h3 class="text-xl font-semibold mb-4 text-violet-300">10. Dibujo de Simetría</h3>
+                    <p class="text-sm text-gray-400 mb-4">Dibuja en un lado y se reflejará en el otro. Ejercicio de enfoque y equilibrio.</p>
+                    <div class="relative w-full">
+                        <canvas id="symmetry-canvas" class="w-full h-80"></canvas>
+                        <div class="absolute inset-y-0 left-1/2 w-px bg-red-400/50 pointer-events-none"></div>
+                    </div>
+                    <button id="symmetry-clear" class="btn-desestres mt-4 bg-red-600 text-white font-bold py-2 px-6 rounded-xl hover:bg-red-700">
+                        Limpiar
+                    </button>
                 </div>
             `;
         }
 
-        function initializeSimetria() {
-            symmetryState.canvas = document.getElementById('symmetry-canvas');
-            symmetryState.ctx = symmetryState.canvas.getContext('2d');
-
-            function resizeCanvasSymmetry() {
-                const container = document.getElementById('simetria-activity');
-                if (container) {
-                    symmetryState.canvas.width = container.clientWidth - 32;
-                    symmetryState.canvas.height = Math.min(400, container.clientWidth * 0.75);
-                    clearCanvasSymmetry();
-                    drawCenterLine();
-                }
+        function initializeSymmetry() {
+            const canvas = document.getElementById('symmetry-canvas');
+            if (!canvas) return;
+            
+            const clearBtn = document.getElementById('symmetry-clear');
+            symmetryCtx = canvas.getContext('2d');
+            
+            function resizeCanvas() {
+                const rect = canvas.parentNode.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = 320;
+                symmetryCtx.lineWidth = 4;
+                symmetryCtx.strokeStyle = '#a78bfa'; /* Violet-400 */
+                symmetryCtx.lineCap = 'round';
             }
-            window.addEventListener('resize', resizeCanvasSymmetry);
-            resizeCanvasSymmetry();
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
 
-            // Configuración inicial
-            symmetryState.ctx.lineCap = 'round';
-            symmetryState.ctx.lineJoin = 'round';
-            symmetryState.ctx.lineWidth = symmetryState.lineWidth;
-            symmetryState.ctx.strokeStyle = symmetryState.color;
-
-            // Event listeners (solo para el lado izquierdo del canvas)
-            symmetryState.canvas.addEventListener('mousedown', startDrawingSymmetry);
-            symmetryState.canvas.addEventListener('mousemove', drawSymmetry);
-            symmetryState.canvas.addEventListener('mouseup', stopDrawingSymmetry);
-            symmetryState.canvas.addEventListener('mouseout', stopDrawingSymmetry);
-            
-            symmetryState.canvas.addEventListener('touchstart', startDrawingSymmetry);
-            symmetryState.canvas.addEventListener('touchmove', drawSymmetry);
-            symmetryState.canvas.addEventListener('touchend', stopDrawingSymmetry);
-
-            // Controles
-            document.getElementById('symmetry-color-picker').addEventListener('input', (e) => {
-                symmetryState.color = e.target.value;
-                symmetryState.ctx.strokeStyle = symmetryState.color;
-            });
-            const thicknessSlider = document.getElementById('symmetry-thickness-slider');
-            const thicknessValue = document.getElementById('symmetry-thickness-value');
-            thicknessSlider.addEventListener('input', (e) => {
-                symmetryState.lineWidth = parseInt(e.target.value);
-                symmetryState.ctx.lineWidth = symmetryState.lineWidth;
-                thicknessValue.textContent = symmetryState.lineWidth;
-            });
-            document.getElementById('symmetry-clear-button').addEventListener('click', clearCanvasSymmetry);
-        }
-
-        function drawCenterLine() {
-            const ctx = symmetryState.ctx;
-            const center = symmetryState.canvas.width / 2;
-            
-            ctx.beginPath();
-            ctx.strokeStyle = '#94a3b8'; // Slate-400
-            ctx.lineWidth = 1;
-            ctx.setLineDash([5, 5]); // Línea punteada
-            ctx.moveTo(center, 0);
-            ctx.lineTo(center, symmetryState.canvas.height);
-            ctx.stroke();
-            ctx.setLineDash([]); // Restablecer a línea continua
-        }
-
-        function getCoordsSymmetry(e) {
-            const rect = symmetryState.canvas.getBoundingClientRect();
-            let clientX, clientY;
-
-            if (e.touches && e.touches.length > 0) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
+            function getRelativePos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                return { x, y };
             }
 
-            return {
-                x: clientX - rect.left,
-                y: clientY - rect.top
+            // [FIX] Se definieron las funciones localmente para evitar el ReferenceError 
+            // en la función de limpieza genérica.
+
+            function handleSymmetryStart(e) {
+                symmetryIsDrawing = true;
+                const pos = getRelativePos(e);
+                symmetryCtx.beginPath();
+                symmetryCtx.moveTo(pos.x, pos.y);
+            };
+
+            function handleSymmetryDraw(e) {
+                if (!symmetryIsDrawing) return;
+                
+                const pos = getRelativePos(e);
+                const centerX = canvas.width / 2;
+                
+                // Dibujo original
+                symmetryCtx.lineTo(pos.x, pos.y);
+                symmetryCtx.stroke();
+                
+                // Reiniciar camino para el reflejo (evitar que se conecten)
+                symmetryCtx.beginPath();
+                symmetryCtx.moveTo(pos.x, pos.y);
+
+                // Dibujo reflejado (calcular la posición simétrica)
+                const reflectedX = centerX + (centerX - pos.x);
+                
+                symmetryCtx.lineTo(reflectedX, pos.y);
+                symmetryCtx.stroke();
+                
+                // Mover al punto de origen para el siguiente segmento
+                symmetryCtx.beginPath();
+                symmetryCtx.moveTo(pos.x, pos.y);
+            };
+
+            function handleSymmetryEnd() {
+                symmetryIsDrawing = false;
+                symmetryCtx.beginPath();
+            };
+
+            // Eventos de ratón
+            canvas.addEventListener('mousedown', handleSymmetryStart);
+            canvas.addEventListener('mouseup', handleSymmetryEnd);
+            canvas.addEventListener('mousemove', handleSymmetryDraw);
+            
+            // Eventos táctiles
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleSymmetryStart(e.touches[0]);
+            });
+            canvas.addEventListener('touchend', handleSymmetryEnd);
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                handleSymmetryDraw(e.touches[0]);
+            });
+
+            clearBtn.onclick = () => {
+                symmetryCtx.clearRect(0, 0, canvas.width, canvas.height);
             };
         }
 
-        function startDrawingSymmetry(e) {
-            e.preventDefault();
-            const coords = getCoordsSymmetry(e);
-            if (coords.x > symmetryState.canvas.width / 2) return; // Solo dibujar en el lado izquierdo
-            
-            symmetryState.isDrawing = true;
-            [symmetryState.lastX, symmetryState.lastY] = [coords.x, coords.y];
-            
-            // Dibujar punto inicial
-            drawSymmetryLine(coords.x, coords.y, coords.x, coords.y);
-        }
-
-        function drawSymmetry(e) {
-            e.preventDefault(); 
-            if (!symmetryState.isDrawing) return;
-            
-            const coords = getCoordsSymmetry(e);
-            if (coords.x > symmetryState.canvas.width / 2) {
-                stopDrawingSymmetry();
-                return;
-            }
-
-            drawSymmetryLine(symmetryState.lastX, symmetryState.lastY, coords.x, coords.y);
-            
-            [symmetryState.lastX, symmetryState.lastY] = [coords.x, coords.y];
-        }
-
-        function drawSymmetryLine(x1, y1, x2, y2) {
-            const ctx = symmetryState.ctx;
-            const center = symmetryState.canvas.width / 2;
-            
-            ctx.strokeStyle = symmetryState.color;
-            ctx.lineWidth = symmetryState.lineWidth;
-
-            // 1. Línea original (izquierda)
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.stroke();
-
-            // 2. Línea simétrica (derecha)
-            const rx1 = center + (center - x1);
-            const rx2 = center + (center - x2);
-            
-            ctx.beginPath();
-            ctx.moveTo(rx1, y1);
-            ctx.lineTo(rx2, y2);
-            ctx.stroke();
-        }
-
-        function stopDrawingSymmetry() {
-            symmetryState.isDrawing = false;
-        }
-
-        function clearCanvasSymmetry() {
-            const ctx = symmetryState.ctx;
-            ctx.clearRect(0, 0, symmetryState.canvas.width, symmetryState.canvas.height);
-            drawCenterLine();
-        }
-
-        // =======================================================
-        // Sistema de Mensajes de Alerta (No-alert)
-        // =======================================================
-        // Usado para notificaciones como el final del Pomodoro
-        function alertMessage(message) {
-            // Reemplazar con una implementación real de modal/toast si fuera necesario
-            console.log("ALERTA:", message); 
-            const header = document.querySelector('header');
-            const alertDiv = document.createElement('div');
-            alertDiv.className = 'fixed top-4 right-4 bg-indigo-500 text-white p-4 rounded-lg shadow-lg z-50 transition-opacity duration-500';
-            alertDiv.textContent = message;
-            document.body.appendChild(alertDiv);
-            
-            setTimeout(() => {
-                alertDiv.style.opacity = '0';
-                setTimeout(() => alertDiv.remove(), 500);
-            }, 3000);
-        }
-        
         // =======================================================
         // Inicialización
         // =======================================================
+
         window.onload = () => switchActivity(currentActivity);
+
     </script>
 </body>
 </html>
